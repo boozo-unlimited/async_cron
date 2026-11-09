@@ -51,7 +51,16 @@ class CronJob:
         self.week_day = None
         self.month_day = None
         self.scheduler = scheduler
-        self.loop = loop or asyncio.get_event_loop()
+        if loop is None:
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                # Python >= 3.14 no longer creates an event loop implicitly
+                # in the main thread - keep the historical behavior of this
+                # library by creating and installing one instead
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+        self.loop = loop
         self.gte_day = False
         self.tz = tz
         # tolerance means if now - at_exact_time <= tolerance,
